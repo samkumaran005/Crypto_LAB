@@ -7,6 +7,14 @@
 using namespace std;
 
 
+int modInverse(int a, int mod) {
+    for (int i = 1; i < mod; i++) {
+        if ((a * i) % mod == 1)
+            return i;
+    }
+    return -1;
+}
+
 int main()
 {
     // creating socket
@@ -22,30 +30,33 @@ int main()
     connect(clientSocket, (struct sockaddr*)&serverAddress,
             sizeof(serverAddress));
 
+        string pt="";
+        cout<<"Enter Plain Text : ";
+        cin>>pt;
+        int a,b;
+        cout<<"Enter a and b value : ";
+        cin>>a>>b;
+        int mod=26;
+        string ct="";
+        for(char ch:pt){
+                char x=(((ch-'a')*a)+b)%mod+'a';
+                ct+=x;
+	}
+	cout<<"Cipher text : "<< ct<<endl;
+
+
     // sending data
-    string s = "";
-    cout << "Enter string to be sent : ";
-    cin >> s;
-
-    int key;
-    cout << "Enter Key : ";
-    cin >> key;
-
-    string encrypt = "";
-
-    for (auto ch : s) {
-
-        int x = (ch - 'a' + key) % 26;
-        encrypt += char(x + 'a');
-    }
-    cout<<"Encrypted Text : "<<encrypt<<endl;
     
-    string skey= to_string(key);
-    const char* message = encrypt.c_str();
+    string sa= to_string(a);
+    string sb= to_string(b);
+    const char* message = ct.c_str();
     send(clientSocket, message, strlen(message), 0);
     usleep(100000);
-    const char* enkey = skey.c_str();
-    send(clientSocket, enkey, strlen(enkey),0);
+    const char* cta = sa.c_str();
+    send(clientSocket, cta, strlen(cta),0);
+    usleep(100000);
+    const char* ctb = sb.c_str();
+    send(clientSocket,ctb, strlen(ctb),0);
     
     // closing socket
     close(clientSocket);

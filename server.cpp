@@ -6,6 +6,15 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+int modInverse(int a, int mod) {
+    for (int i = 1; i < mod; i++) {
+        if ((a * i) % mod == 1)
+            return i;
+    }
+    return -1;
+}
+
+
 int main()
 {
     // creating socket
@@ -29,21 +38,29 @@ int main()
 
     // recieving data
     char buffer[1024] = { 0 };
-    char keybuffer[1024] = { 0 };
+    char abuffer[1024] = { 0 };
+    char bbuffer[1024] = { 0 };
     recv(clientSocket, buffer, sizeof(buffer), 0);
-    recv(clientSocket,keybuffer,sizeof(keybuffer),0);
+    recv(clientSocket,abuffer,sizeof(abuffer),0);
+    recv(clientSocket,bbuffer,sizeof(bbuffer),0);
     cout << "Encrypted Message from client: " << buffer<< endl;
     string decrypt = "";
     string encrypt = buffer;
-    string skey = keybuffer;
-    int key = stoi(skey);
-    for (auto ch : encrypt) {
-
-        int x = (ch - 'a' - key + 26) % 26;
-        decrypt += char(x + 'a');
+    string sa = abuffer;
+    string sb = bbuffer;
+    int a = stoi(sa);
+    int b = stoi(sb);
+    int mod=26;
+    string dt = "";
+    string ct= buffer;
+    int aInv=modInverse(a,mod);
+    for (char ch : ct) {
+        int val = (aInv * ((ch - 'a') - b + mod)) % mod;
+        char x = val + 'a';
+        dt += x;
     }
 
-    cout << "\nDecrypted String: " << decrypt << endl;
+    cout << "\nDecrypted String: " << dt << endl;
 
     // closing the socket.
     close(serverSocket);
