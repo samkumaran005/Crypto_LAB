@@ -3,33 +3,35 @@ import java.util.Scanner;
 
 public class FermatPrimality {
 
-    static boolean fermatTest(BigInteger p) {
+static boolean fermatTest(BigInteger p) {
+    // Test all a from 1 to p-1
+    for (BigInteger a = BigInteger.ONE;
+         a.compareTo(p) < 0;
+         a = a.add(BigInteger.ONE)) {
 
-        // Test all a from 1 to p-1
-        for (BigInteger a = BigInteger.ONE;
-             a.compareTo(p) < 0;
-             a = a.add(BigInteger.ONE)) {
+        // Calculate a^p
+        BigInteger power = a.pow(p.intValue());
 
-            // Calculate a^p mod p
-            BigInteger result = a.modPow(p, p);
+        // Calculate a^p - a
+        BigInteger lhs = power.subtract(a);
 
-            // Calculate a mod p
-            BigInteger aModP = a.mod(p);
-
+        // Display the calculation
+        if (p.compareTo(BigInteger.valueOf(100)) < 0) {
             System.out.println(
-                    "a = " + a +
-                    "   a^p mod p = " + result
+                "a = " + a + " -> " + a + "^" + p + " - " + a + " = " + lhs
             );
-
-            // Fermat condition:
-            // a^p mod p should be equal to a mod p
-            if (!result.equals(aModP)) {
-                return false;
-            }
         }
 
-        return true;
+        // Fermat condition: (a^p - a) mod p == 0
+        if (!lhs.mod(p).equals(BigInteger.ZERO)) {
+            return false;
+        }
     }
+    return true;
+}
+
+
+
 
     public static void main(String[] args) {
 
