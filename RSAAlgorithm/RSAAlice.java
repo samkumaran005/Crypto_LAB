@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
+import java.math.BigInteger;
 
 public class RSAAlice {
     public static void main(String[] args) throws Exception {
@@ -8,16 +9,16 @@ public class RSAAlice {
 
         // Alice chooses primes
         System.out.print("Enter prime p for Alice: ");
-        int p = sc.nextInt();
+        BigInteger p = sc.nextBigInteger();
         System.out.print("Enter prime q for Alice: ");
-        int q = sc.nextInt();
+        BigInteger q = sc.nextBigInteger();
 
-        int n = p * q;
-        int phi = (p - 1) * (q - 1);
+        BigInteger n = p.multiply(q);
+        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
 
         System.out.print("Enter Alice public key Kua : ");
-        int Kua = sc.nextInt();
-        int Kra = modInverse(Kua, phi);
+        BigInteger Kua = sc.nextBigInteger();
+        BigInteger Kra = Kua.modInverse(phi);
 
         System.out.println("Alice Public Key {Kua, n} = {" + Kua + ", " + n + "}");
         System.out.println("Alice Private Key {Kra, n} = {" + Kra + ", " + n + "}");
@@ -27,57 +28,32 @@ public class RSAAlice {
              DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
 
             // Receive Bob’s public key
-            int Kub = in.readInt();
-            int nb = in.readInt();
+            BigInteger Kub = new BigInteger(in.readUTF());
+            BigInteger nb = new BigInteger(in.readUTF());
             System.out.println("Received Bob Public Key {Kub, n} = {" + Kub + ", " + nb + "}");
 
             // Send Alice’s public key
-            out.writeInt(Kua);
-            out.writeInt(n);
+            out.writeUTF(Kua.toString());
+            out.writeUTF(n.toString());
 
             // Alice’s message + signature
             System.out.print("Enter Alice message: ");
-            int aliceMsg = sc.nextInt();
-            int aliceSig = modPow(aliceMsg, Kra, n);
+            BigInteger aliceMsg = sc.nextBigInteger();
+            BigInteger aliceSig = aliceMsg.modPow(Kra, n);
 
-            out.writeInt(aliceMsg);
-            out.writeInt(aliceSig);
+            out.writeUTF(aliceMsg.toString());
+            out.writeUTF(aliceSig.toString());
 
             System.out.println("Alice sent message: " + aliceMsg);
             System.out.println("Alice sent signature: " + aliceSig);
 
             // Receive Bob’s ciphertext
-            int bobCipher = in.readInt();
-            int bobPlain = modPow(bobCipher, Kra, n);
+            BigInteger bobCipher = new BigInteger(in.readUTF());
+            BigInteger bobPlain = bobCipher.modPow(Kra, n);
 
             System.out.println("\nReceived Bob Ciphertext: " + bobCipher);
             System.out.println("Decrypted Bob Message: " + bobPlain);
         }
-    }
-
-    static int modPow(int base, int exp, int mod) {
-        int result = 1;
-        base = base % mod;
-        while (exp > 0) {
-            if ((exp & 1) == 1) result = (result * base) % mod;
-            exp >>= 1;
-            base = (base * base) % mod;
-        }
-        return result;
-    }
-
-    static int modInverse(int a, int m) {
-        int m0 = m, t, q;
-        int x0 = 0, x1 = 1;
-        while (a > 1) {
-            q = a / m;
-            t = m;
-            m = a % m; a = t;
-            t = x0;
-            x0 = x1 - q * x0;
-            x1 = t;
-        }
-        if (x1 < 0) x1 += m0;
-        return x1;
+        sc.close();
     }
 }
