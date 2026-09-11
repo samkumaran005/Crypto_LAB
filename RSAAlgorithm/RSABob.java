@@ -1,4 +1,5 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
 import java.util.Scanner;
 
@@ -8,16 +9,16 @@ public class RSABob {
 
         // Bob chooses primes
         System.out.print("Enter prime p for Bob: ");
-        int p = sc.nextInt();
+        BigInteger p = sc.nextBigInteger();
         System.out.print("Enter prime q for Bob: ");
-        int q = sc.nextInt();
+        BigInteger q = sc.nextBigInteger();
 
-        int n = p * q;
-        int phi = (p - 1) * (q - 1);
+        BigInteger n = p.multiply(q);
+        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
 
         System.out.print("Enter Bob public key Kub : ");
-        int Kub = sc.nextInt();
-        int Krb = modInverse(Kub, phi);
+        BigInteger Kub = sc.nextBigInteger();
+        BigInteger Krb = Kub.modInverse(phi);
 
         System.out.println("Bob Public Key {Kub, n} = {" + Kub + ", " + n + "}");
         System.out.println("Bob Private Key {Krb, n} = {" + Krb + ", " + n + "}");
@@ -29,23 +30,25 @@ public class RSABob {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             // Send Bob’s public key to Alice
-            out.writeInt(Kub);
-            out.writeInt(n);
+            out.writeUTF(Kub.toString());
+            out.writeUTF(n.toString());
 
             // Receive Alice’s public key
-            int Kua = in.readInt();
-            int na = in.readInt();
+            BigInteger Kua = new BigInteger(in.readUTF());
+            BigInteger na = new BigInteger(in.readUTF());
 
             // Receive Alice’s message + signature
-            int aliceMsg = in.readInt();
-            int aliceSig = in.readInt();
+            BigInteger aliceMsg = new BigInteger(in.readUTF());
+            BigInteger aliceSig = new BigInteger(in.readUTF());
 
             System.out.println("\nReceived Alice Message: " + aliceMsg);
             System.out.println("Received Alice Signature: " + aliceSig);
 
             // Verify Alice’s signature
-            int verified = modPow(aliceSig, Kua, na);
-            if (verified == aliceMsg) {
+            BigInteger verified = aliceSig.modPow(Kua, na);
+            System.out.println("Verification result = " + verified);
+
+            if (verified.equals(aliceMsg)) {
                 System.out.println("Authentication SUCCESS: Alice message verified.");
             } else {
                 System.out.println("Authentication FAILED.");
@@ -53,37 +56,12 @@ public class RSABob {
 
             // Bob sends his own message to Alice (confidentiality)
             System.out.print("\nEnter Bob message : ");
-            int bobMsg = sc.nextInt();
-            int bobCipher = modPow(bobMsg, Kua, na);
+            BigInteger bobMsg = sc.nextBigInteger();
+            BigInteger bobCipher = bobMsg.modPow(Kua, na);
 
-            out.writeInt(bobCipher);
+            out.writeUTF(bobCipher.toString());
             System.out.println("Bob sent ciphertext: " + bobCipher);
         }
-    }
-
-    static int modPow(int base, int exp, int mod) {
-        int result = 1;
-        base = base % mod;
-        while (exp > 0) {
-            if ((exp & 1) == 1) result = (result * base) % mod;
-            exp >>= 1;
-            base = (base * base) % mod;
-        }
-        return result;
-    }
-
-    static int modInverse(int a, int m) {
-        int m0 = m, t, q;
-        int x0 = 0, x1 = 1;
-        while (a > 1) {
-            q = a / m;
-            t = m;
-            m = a % m; a = t;
-            t = x0;
-            x0 = x1 - q * x0;
-            x1 = t;
-        }
-        if (x1 < 0) x1 += m0;
-        return x1;
+        sc.close();
     }
 }
